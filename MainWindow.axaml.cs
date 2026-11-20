@@ -185,6 +185,7 @@ public partial class MainWindow : Window
         {
             0 => new Uri("https://generativelanguage.googleapis.com/v1beta/openai/"),
             1 => new Uri("https://openrouter.ai/api/v1"),
+            2 => new Uri("https://api.venice.ai/api/v1"),
             _ => throw new ArgumentOutOfRangeException(nameof(ProviderComboBox.SelectedIndex))
         };
 
