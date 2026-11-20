@@ -9,6 +9,10 @@ The following inference providers are supported:
 - VeniceAI
 - OpenRouter
 
+## Download
+Check the [downloads](https://github.com/Tesyl-sro/product-description-generator/releases) page. Builds are made automatically for every OS and architecture.
+Builds with `aot` use Native AOT compilation, which run faster.
+
 ## Publishing
 Each platform has a publish profile in `Properties/PublishProfiles/`. It builds a self-contained, trimmed, single-file executable in `bin/publish/<profile>/`.
 
