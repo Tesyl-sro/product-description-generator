@@ -3,6 +3,7 @@ using System.ClientModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,8 @@ public partial class MainWindow : Window
         
         // Set the system prompt to the default one
         SystemPromptTextBox.Text = DefaultSystemPrompt;
+
+        VersionTextBlock.Text = $"v{GetAppVersion()}";
         
         ProviderComboBox.SelectionChanged += (_, _) => OnProviderSettingsChanged();
         ApiKeyTextBox.TextChanged += (_, _) => OnProviderSettingsChanged(debounce: true);
@@ -305,6 +308,19 @@ public partial class MainWindow : Window
         MetaDescriptionTextBox.Text = string.Empty;
         MetaTitleTextBox.Text = string.Empty;
         ProductTitleTextBox.Text = string.Empty;
+    }
+
+    /// <summary>
+    /// The app version from the assembly (csproj VersionPrefix locally, the git tag in CI),
+    /// without the "+commit hash" suffix the SDK appends. Safe under Native AOT.
+    /// </summary>
+    private static string GetAppVersion()
+    {
+        var version = typeof(MainWindow).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
+
+        return string.IsNullOrEmpty(version) ? "?" : version.Split('+')[0];
     }
 
     private static string CleanUpException(string raw) => raw.Trim().ReplaceLineEndings(" ");
