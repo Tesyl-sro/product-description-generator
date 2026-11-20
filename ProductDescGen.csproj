@@ -9,6 +9,20 @@
         <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
     </PropertyGroup>
 
+    <!-- Product metadata (shown in the exe's Properties > Details on Windows) -->
+    <PropertyGroup>
+        <!-- Fallback for local builds; CI overrides this from the git tag -->
+        <VersionPrefix>1.0.0</VersionPrefix>
+        <Product>Product Description Generator</Product>
+        <AssemblyTitle>Product Description Generator</AssemblyTitle>
+        <Description>Generates product descriptions using AI.</Description>
+        <Company>TESYL s.r.o.</Company>
+        <Authors>TESYL s.r.o., Fábián Varga</Authors>
+        <Copyright>© 2026 TESYL s.r.o.</Copyright>
+        <!-- Uncomment once the icon file exists, otherwise the build fails -->
+        <!-- <ApplicationIcon>Assets/app.ico</ApplicationIcon> -->
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="12.1.6" />
         <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
