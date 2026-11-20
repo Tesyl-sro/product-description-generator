@@ -1,0 +1,197 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
+        x:Class="ProductDescGen.MainWindow"
+        Title="Product Description Generator"
+        Width="1000" Height="650"
+        MinWidth="760" MinHeight="500">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style Selector="TextBlock.header">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+
+        <!-- Keep the model dropdown exactly as wide as the box. By default it sizes to the
+             widest *visible* item, and since the list is virtualized that changes while scrolling. -->
+        <Style Selector="AutoCompleteBox#ModelAutoCompleteBox /template/ Popup#PART_Popup">
+            <Setter Property="Width" Value="{Binding $parent[AutoCompleteBox].Bounds.Width}" />
+        </Style>
+        <!-- Truncate long model IDs instead of letting them push the width; full ID in tooltip -->
+        <Style Selector="AutoCompleteBox#ModelAutoCompleteBox /template/ ListBox ListBoxItem" x:DataType="x:String">
+            <Setter Property="ToolTip.Tip" Value="{Binding}" />
+            <Setter Property="ContentTemplate">
+                <DataTemplate x:DataType="x:String">
+                    <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" />
+                </DataTemplate>
+            </Setter>
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+    <!-- Footer: must come before the main content so it docks to the bottom -->
+    <Border DockPanel.Dock="Bottom"
+            BorderThickness="0,1,0,0"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            Padding="16,6">
+        <Grid ColumnDefinitions="*,Auto,Auto">
+            <TextBlock x:Name="StatusTextBlock"
+                       Grid.Column="0"
+                       Text="Ready"
+                       FontSize="12"
+                       TextTrimming="CharacterEllipsis"
+                       Margin="0,0,16,0" />
+            <TextBlock x:Name="CopyrightTextBlock"
+                       Grid.Column="1"
+                       Text="© 2026 TESYL s.r.o. All rights reserved."
+                       FontSize="12"
+                       Opacity="0.6"
+                       Margin="0,0,16,0" />
+            <TextBlock x:Name="VersionTextBlock"
+                       Grid.Column="2"
+                       Text="Avalonia .NET 10 - v1.0.0"
+                       FontSize="12"
+                       Opacity="0.6" />
+        </Grid>
+    </Border>
+
+    <Grid ColumnDefinitions="320,Auto,*" Margin="16">
+
+        <!-- Left panel: provider / model / credentials / system prompt -->
+        <ScrollViewer Grid.Column="0">
+            <StackPanel Spacing="14" Margin="0,0,12,0">
+                <TextBlock Classes="header" Text="Settings" />
+
+                <StackPanel>
+                    <TextBlock Classes="label" Text="Inference provider" />
+                    <ComboBox x:Name="ProviderComboBox"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="Select a provider"
+                              SelectedIndex="0">
+                        <ComboBoxItem Content="Google Gemini" />
+                        <ComboBoxItem Content="OpenRouter" />
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel>
+                    <TextBlock Classes="label" Text="Model" />
+                    <AutoCompleteBox x:Name="ModelAutoCompleteBox"
+                                     HorizontalAlignment="Stretch"
+                                     FilterMode="Custom"
+                                     MinimumPrefixLength="0"
+                                     MaxDropDownHeight="300"
+                                     IsTextCompletionEnabled="False"
+                                     PlaceholderText="Search for a model" />
+                </StackPanel>
+
+                <StackPanel>
+                    <TextBlock Classes="label" Text="API key" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox x:Name="ApiKeyTextBox"
+                                 Grid.Column="0"
+                                 PasswordChar="•"
+                                 RevealPassword="{Binding #ShowApiKeyToggle.IsChecked}"
+                                 PlaceholderText="Enter your API key" />
+                        <ToggleButton x:Name="ShowApiKeyToggle"
+                                      Grid.Column="1"
+                                      Margin="6,0,0,0"
+                                      VerticalAlignment="Stretch"
+                                      Content="Show"
+                                      ToolTip.Tip="Show / hide API key" />
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel>
+                    <TextBlock Classes="label" Text="System prompt" />
+                    <TextBox x:Name="SystemPromptTextBox"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             Height="200"
+                             VerticalContentAlignment="Top"
+                             IsEnabled="{Binding #AllowEditSystemPromptCheckBox.IsChecked}"
+                             PlaceholderText="You are a copywriter who writes concise, persuasive product descriptions..." />
+                    <CheckBox x:Name="AllowEditSystemPromptCheckBox"
+                              Margin="0,6,0,0"
+                              IsChecked="False"
+                              Content="Allow editing system prompt" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <GridSplitter Grid.Column="1" Width="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                      ResizeDirection="Columns" />
+
+        <!-- Right panel: product input and generated description -->
+        <Grid Grid.Column="2" Margin="16,0,0,0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
+            <TextBlock Grid.Row="0" Classes="header" Text="Product" />
+
+            <Grid Grid.Row="1" Margin="0,0,0,14" ColumnDefinitions="*,12,*">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Classes="label" Text="Product name" />
+                    <TextBox x:Name="ProductNameTextBox"
+                             PlaceholderText="e.g. Stainless Steel Water Bottle, 750 ml" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Classes="label" Text="Condition" />
+                    <TextBox x:Name="ConditionTextBox"
+                             PlaceholderText="e.g. Used, minor scratches on the lid" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Generated output (read-only, filled by the LLM) -->
+            <StackPanel Grid.Row="2" Margin="0,0,0,10">
+                <TextBlock Classes="label" Text="Product title" />
+                <TextBox x:Name="ProductTitleTextBox"
+                         IsReadOnly="True"
+                         PlaceholderText="Generated product title" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="3" Margin="0,0,0,10">
+                <TextBlock Classes="label" Text="Meta title" />
+                <TextBox x:Name="MetaTitleTextBox"
+                         IsReadOnly="True"
+                         PlaceholderText="Generated meta title" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="4" Margin="0,0,0,10">
+                <TextBlock Classes="label" Text="Meta description" />
+                <TextBox x:Name="MetaDescriptionTextBox"
+                         IsReadOnly="True"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         Height="64"
+                         VerticalContentAlignment="Top"
+                         PlaceholderText="Generated meta description" />
+            </StackPanel>
+
+            <TextBlock Grid.Row="5" Classes="label" Text="HTML" />
+            <TextBox x:Name="HtmlTextBox"
+                     Grid.Row="6"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalContentAlignment="Top"
+                     FontFamily="Cascadia Mono, Consolas, monospace"
+                     PlaceholderText="Generated HTML product description" />
+
+            <StackPanel Grid.Row="7"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="8"
+                        Margin="0,12,0,0">
+                <Button x:Name="ClearButton" Content="Clear" />
+                <Button x:Name="CopyButton" Content="Copy" />
+                <Button x:Name="GenerateButton" Content="Generate" Classes="accent" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+    </DockPanel>
+</Window>

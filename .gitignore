@@ -1,0 +1,61 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+[Pp]ublish/
+artifacts/
+*.binlog
+
+# User-specific files
+*.user
+*.suo
+*.userprefs
+*.rsuser
+*.DotSettings.user
+
+# JetBrains Rider
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/shelf/
+.idea/**/contentModel.xml
+.idea/**/dataSources/
+.idea/**/dataSources.local.xml
+.idea/**/dictionaries/
+.idea/**/httpRequests/
+.idea/**/caches/
+*.sln.iml
+
+# Visual Studio / VS Code
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+
+# Test results / coverage
+[Tt]est[Rr]esult*/
+*.trx
+coverage*.json
+coverage*.xml
+*.coverage
+
+# Local secrets / environment
+.env
+.env.*
+appsettings.*.local.json
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
