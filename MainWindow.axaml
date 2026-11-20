@@ -78,6 +78,7 @@
                         <ComboBoxItem Content="Google Gemini" />
                         <ComboBoxItem Content="OpenRouter" />
                         <ComboBoxItem Content="Venice AI" />
+                        <ComboBoxItem Content="OpenAI" />
                     </ComboBox>
                 </StackPanel>
 
