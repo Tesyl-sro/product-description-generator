@@ -8,7 +8,7 @@ namespace ProductDescGen.Data;
 public sealed record AppSettings(
     int ProviderIndex = 0,
     string? ApiKey = null,
-    string? Model = null,
+    string? PreferredModel = null,
     string? CustomSystemPrompt = null);
 
 [JsonSourceGenerationOptions(WriteIndented = true)]

@@ -34,8 +34,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         
         // Restore settings
-        ProviderComboBox.SelectedIndex = _savedSettings.ProviderIndex;
-        ApiKeyTextBox.Text = _savedSettings.ApiKey;
+        RestoreSettings();
         
         // Set the system prompt to the default one
         SystemPromptTextBox.Text = DefaultSystemPrompt;
@@ -291,12 +290,28 @@ public partial class MainWindow : Window
             SetUiEnabled(true);
         }
     }
+
+    private void RestoreSettings()
+    {
+        ProviderComboBox.SelectedIndex = _savedSettings.ProviderIndex;
+        ApiKeyTextBox.Text = _savedSettings.ApiKey;
+
+        if (_savedSettings.CustomSystemPrompt is not null)
+        {
+            SystemPromptTextBox.Text = _savedSettings.CustomSystemPrompt;
+            AllowEditSystemPromptCheckBox.IsChecked = true;
+        }
+    }
     
     private void SaveSettings()
     {
         try
         {
-            SettingsStore.Save(new AppSettings(ProviderComboBox.SelectedIndex, ApiKeyTextBox.Text, SelectedModel));
+            SettingsStore.Save(new (
+                ProviderComboBox.SelectedIndex,
+                ApiKeyTextBox.Text,
+                SelectedModel, 
+                AllowEditSystemPromptCheckBox.IsChecked == true ? SystemPromptTextBox.Text : null));
         }
         catch (Exception ex)
         {
