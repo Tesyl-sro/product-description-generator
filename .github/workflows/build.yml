@@ -11,18 +11,24 @@ permissions:
 
 jobs:
   build:
-    name: Build ${{ matrix.rid }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        rid: [win-x64, win-arm64, linux-x64, linux-arm64, osx-x64, osx-arm64]
+        # Every profile is built twice: as-is (single file) and as Native AOT
+        aot: [false, true]
         include:
           - { rid: win-x64,     os: windows-latest }
           - { rid: win-arm64,   os: windows-latest }
           - { rid: linux-x64,   os: ubuntu-latest }
-          - { rid: linux-arm64, os: ubuntu-latest }
+          # Native AOT can't cross-compile Linux x64 -> arm64 without a cross toolchain, so build natively
+          - { rid: linux-arm64, os: ubuntu-24.04-arm }
           - { rid: osx-x64,     os: macos-latest }
           - { rid: osx-arm64,   os: macos-latest }
+    env:
+      # Artifact/output name, e.g. linux-x64 or linux-x64-aot
+      NAME: ${{ matrix.rid }}${{ matrix.aot && '-aot' || '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +37,13 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      # Tag v1.2.3 -> version 1.2.3; manual runs use the csproj <Version> with a -dev suffix
+      # Native AOT on Linux links with clang and needs the zlib headers
+      - name: Install Native AOT prerequisites (Linux)
+        if: matrix.aot && runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      # Tag v1.2.3 -> version 1.2.3; manual runs use the csproj <Version> with a -dev suffix.
+      # AOT is enabled on top of the regular profile; single-file publishing doesn't combine with it.
       - name: Publish
         shell: bash
         run: |
@@ -40,22 +52,26 @@ jobs:
           else
             VERSION_ARG="-p:VersionSuffix=dev.${GITHUB_RUN_NUMBER}"
           fi
-          dotnet publish ProductDescGen.csproj -p:PublishProfile=${{ matrix.rid }} $VERSION_ARG
+          AOT_ARGS=""
+          if [[ "${{ matrix.aot }}" == "true" ]]; then
+            AOT_ARGS="-p:PublishAot=true -p:PublishSingleFile=false"
+          fi
+          dotnet publish ProductDescGen.csproj -p:PublishProfile=${{ matrix.rid }} -p:PublishDir=bin/publish/$NAME/ $VERSION_ARG $AOT_ARGS
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: Compress-Archive -Path bin/publish/${{ matrix.rid }}/* -DestinationPath ProductDescGen-${{ matrix.rid }}.zip
+        run: Compress-Archive -Path bin/publish/$env:NAME/* -DestinationPath ProductDescGen-$env:NAME.zip
 
       # tar keeps the executable bit, which a zip artifact would lose
       - name: Package (Linux/macOS)
         if: runner.os != 'Windows'
-        run: tar -czf ProductDescGen-${{ matrix.rid }}.tar.gz -C bin/publish/${{ matrix.rid }} .
+        run: tar -czf ProductDescGen-$NAME.tar.gz -C bin/publish/$NAME .
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ProductDescGen-${{ matrix.rid }}
-          path: ProductDescGen-${{ matrix.rid }}.*
+          name: ProductDescGen-${{ env.NAME }}
+          path: ProductDescGen-${{ env.NAME }}.*
           if-no-files-found: error
 
   release:
