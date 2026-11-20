@@ -20,3 +20,9 @@ Each platform has a publish profile in `Properties/PublishProfiles/`. It builds 
 | macOS Apple Silicon | `dotnet publish ProductDescGen.csproj -p:PublishProfile=osx-arm64` |
 | Linux x64 | `dotnet publish ProductDescGen.csproj -p:PublishProfile=linux-x64` |
 | Linux Arm64 | `dotnet publish ProductDescGen.csproj -p:PublishProfile=linux-arm64` |
+
+### Native AOT compilation
+You can fully compile the app and remove the JIT runtime using the following command:
+```sh
+dotnet publish ProductDescGen.csproj -p:PublishProfile=<profile> -p:PublishAot=true -p:PublishSingleFile=false -p:PublishDir=bin/publish/<profile>-aot/
+```
