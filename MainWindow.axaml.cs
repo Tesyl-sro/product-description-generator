@@ -27,16 +27,23 @@ public partial class MainWindow : Window
     
     private OpenAIClient? _llmClient;
     private CancellationTokenSource? _updateCts;
+    private readonly AppSettings _savedSettings = SettingsStore.Load();
     
     public MainWindow()
     {
         InitializeComponent();
         
+        // Restore settings
+        ProviderComboBox.SelectedIndex = _savedSettings.ProviderIndex;
+        ApiKeyTextBox.Text = _savedSettings.ApiKey;
+        
         // Set the system prompt to the default one
         SystemPromptTextBox.Text = DefaultSystemPrompt;
 
+        // Display app version
         VersionTextBlock.Text = $"v{GetAppVersion()}";
         
+        // Register hooks for when provider and API key are changed
         ProviderComboBox.SelectionChanged += (_, _) => OnProviderSettingsChanged();
         ApiKeyTextBox.TextChanged += (_, _) => OnProviderSettingsChanged(debounce: true);
 
@@ -57,6 +64,10 @@ public partial class MainWindow : Window
 
         // Copy to clipboard handle
         CopyButton.Click += async (_, _) => await CopyHtmlToClipboard();
+        
+        // Load the model list for the restored provider/key
+        if (!string.IsNullOrEmpty(_savedSettings.ApiKey))
+            OnProviderSettingsChanged();
     }
 
     private void SetUpModelPicker()
@@ -120,6 +131,7 @@ public partial class MainWindow : Window
             SetProviderConfigUiEnabled(false);
             await UpdateProvider();
             SetStatus("Ready.");
+            SaveSettings();
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)
         {
@@ -277,6 +289,18 @@ public partial class MainWindow : Window
         {
             // Re-enable the UI however generation ended (success, bad JSON or exception)
             SetUiEnabled(true);
+        }
+    }
+    
+    private void SaveSettings()
+    {
+        try
+        {
+            SettingsStore.Save(new AppSettings(ProviderComboBox.SelectedIndex, ApiKeyTextBox.Text, SelectedModel));
+        }
+        catch (Exception ex)
+        {
+            SetErrorStatus($"Failed to save settings: {CleanUpException(ex.Message)}");
         }
     }
 
