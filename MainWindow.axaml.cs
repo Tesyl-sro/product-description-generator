@@ -101,7 +101,8 @@ public partial class MainWindow : Window
         ModelAutoCompleteBox.ItemFilter = (search, item) =>
             item is string id &&
             (string.IsNullOrEmpty(search)
-             || search == ModelAutoCompleteBox.Text
+             // compare against the picked item, not Text: Text always equals the search string
+             || search == ModelAutoCompleteBox.SelectedItem as string
              || id.Contains(search, StringComparison.OrdinalIgnoreCase));
 
         // Open the list when the text part is clicked. Clicks inside the dropdown itself also
@@ -229,7 +230,12 @@ public partial class MainWindow : Window
             ModelAutoCompleteBox.SelectedItem = null;
             ModelAutoCompleteBox.Text = null;
         }
-        
+        else
+        {
+            // still valid: mark it as picked so opening the box shows the whole list
+            ModelAutoCompleteBox.SelectedItem = previousModel;
+        }
+
         SetStatus("Ready.");
     }
 
