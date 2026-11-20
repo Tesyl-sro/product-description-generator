@@ -19,6 +19,16 @@
             <Setter Property="Margin" Value="0,0,0,8" />
         </Style>
 
+        <!-- Icon buttons beside the API key and model inputs: same fixed size so both inputs line up -->
+        <Style Selector=":is(Button).sideIcon">
+            <Setter Property="Width" Value="38" />
+            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
         <!-- Keep the model dropdown exactly as wide as the box. By default it sizes to the
              widest *visible* item, and since the list is virtualized that changes while scrolling. -->
         <Style Selector="AutoCompleteBox#ModelAutoCompleteBox /template/ Popup#PART_Popup">
@@ -92,8 +102,7 @@
                                  PlaceholderText="Enter your API key" />
                         <ToggleButton x:Name="ShowApiKeyToggle"
                                       Grid.Column="1"
-                                      Margin="6,0,0,0"
-                                      VerticalAlignment="Stretch"
+                                      Classes="sideIcon"
                                       ToolTip.Tip="Show / hide API key">
                             <!-- Eye icon; a vector so it renders the same regardless of font -->
                             <PathIcon Width="16" Height="16"
@@ -115,8 +124,7 @@
                                          PlaceholderText="Search for a model" />
                         <Button x:Name="FetchModelsButton"
                                 Grid.Column="1"
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Stretch"
+                                Classes="sideIcon"
                                 ToolTip.Tip="Fetch the model list from the provider">
                             <!-- Downward arrow; a vector icon so it renders the same regardless of font -->
                             <PathIcon Width="12" Height="12"
