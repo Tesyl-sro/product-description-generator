@@ -81,18 +81,7 @@
                         <ComboBoxItem Content="OpenAI" />
                     </ComboBox>
                 </StackPanel>
-
-                <StackPanel>
-                    <TextBlock Classes="label" Text="Model" />
-                    <AutoCompleteBox x:Name="ModelAutoCompleteBox"
-                                     HorizontalAlignment="Stretch"
-                                     FilterMode="Custom"
-                                     MinimumPrefixLength="0"
-                                     MaxDropDownHeight="300"
-                                     IsTextCompletionEnabled="False"
-                                     PlaceholderText="Search for a model" />
-                </StackPanel>
-
+                
                 <StackPanel>
                     <TextBlock Classes="label" Text="API key" />
                     <Grid ColumnDefinitions="*,Auto">
@@ -107,6 +96,29 @@
                                       VerticalAlignment="Stretch"
                                       Content="Show"
                                       ToolTip.Tip="Show / hide API key" />
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel>
+                    <TextBlock Classes="label" Text="Model" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <AutoCompleteBox x:Name="ModelAutoCompleteBox"
+                                         Grid.Column="0"
+                                         HorizontalAlignment="Stretch"
+                                         FilterMode="Custom"
+                                         MinimumPrefixLength="0"
+                                         MaxDropDownHeight="300"
+                                         IsTextCompletionEnabled="False"
+                                         PlaceholderText="Search for a model" />
+                        <Button x:Name="FetchModelsButton"
+                                Grid.Column="1"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Stretch"
+                                ToolTip.Tip="Fetch the model list from the provider">
+                            <!-- Downward arrow; a vector icon so it renders the same regardless of font -->
+                            <PathIcon Width="12" Height="12"
+                                      Data="M7,0 L9,0 L9,11 L13.3,6.7 L14.7,8.1 L8,14.8 L1.3,8.1 L2.7,6.7 L7,11 Z" />
+                        </Button>
                     </Grid>
                 </StackPanel>
 

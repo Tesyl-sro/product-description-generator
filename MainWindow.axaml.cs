@@ -26,7 +26,7 @@ public partial class MainWindow : Window
         "You are an expert industrial parts copywriter and SEO specialist. I will provide you with a Product name or part number and its condition.\n\nYou must return a valid, parseable JSON object with exactly these four keys:\n- `product_title`: A clean, descriptive title for the product page.\n- `meta_title`: An SEO-optimized title (maximum 60 characters) starting with the part number.\n- `meta_description`: A SEO-optimized meta description (maximum 160 characters) that includes the part number and condition.\n- `html_description`: A professional technical product description formatted strictly in HTML. It must include a brief introductory `<p>`, a `<ul>` list of technical specifications or inferred features based on the part number, and a `<strong>` tag highlighting the condition. Do not include `<html>` or `<body>` tags, just the raw HTML content.\n\nOutput ONLY the raw JSON object. Do not include any conversational text.";
     
     private OpenAIClient? _llmClient;
-    private CancellationTokenSource? _updateCts;
+    private readonly ApiKeyCredential _credential = new("EMPTY");
     private readonly AppSettings _savedSettings = SettingsStore.Load();
     
     public MainWindow()
@@ -41,12 +41,6 @@ public partial class MainWindow : Window
 
         // Display app version
         VersionTextBlock.Text = $"v{GetAppVersion()}";
-        
-        // Register hooks for when provider and API key are changed
-        ProviderComboBox.SelectionChanged += (_, _) => OnProviderSettingsChanged();
-        ApiKeyTextBox.TextChanged += (_, _) => OnProviderSettingsChanged(debounce: true);
-
-        SetUpModelPicker();
 
         // Unchecking "Allow editing" discards any edits and restores the default prompt
         AllowEditSystemPromptCheckBox.IsCheckedChanged += (_, _) =>
@@ -67,12 +61,39 @@ public partial class MainWindow : Window
         // Copy to clipboard handle
         CopyButton.Click += async (_, _) => await CopyHtmlToClipboard();
         
-        // Load the model list for the restored provider/key
-        if (!string.IsNullOrEmpty(_savedSettings.ApiKey))
+        // Set up model picker
+        SetUpModelPicker();
+        
+        // Update the client's API key if it's changed in the UI
+        ApiKeyTextBox.TextChanged += (_, _) => _credential.Update(string.IsNullOrWhiteSpace(ApiKeyTextBox.Text) ? "EMPTY" : ApiKeyTextBox.Text);
+        
+        // If we change the provider, we'll probably need a new key, so clear the current one
+        ProviderComboBox.SelectionChanged += (_, _) =>
         {
-            OnProviderSettingsChanged();
-            ModelAutoCompleteBox.Text = _savedSettings.PreferredModel;
-        }
+            _llmClient = null;
+            ModelAutoCompleteBox.ItemsSource = null;
+            ModelAutoCompleteBox.SelectedItem = null;
+            ModelAutoCompleteBox.Text = null;
+            ApiKeyTextBox.Text = null;
+        };
+        
+        // Re-create the client and fetch the model list
+        FetchModelsButton.Click += async (_, _) =>
+        {
+            SetProviderConfigUiEnabled(false);
+            try
+            {
+                await UpdateModels();
+            }
+            catch (Exception ex)
+            {
+                SetErrorStatus($"Failed to fetch models: {CleanUpException(ex.Message)}");
+            }
+            finally
+            {
+                SetProviderConfigUiEnabled(true);
+            }
+        };
     }
 
     private void SetUpModelPicker()
@@ -82,7 +103,7 @@ public partial class MainWindow : Window
         ModelAutoCompleteBox.ItemFilter = (search, item) =>
             item is string id &&
             (string.IsNullOrEmpty(search)
-             || search == SelectedModel
+             || search == ModelAutoCompleteBox.Text
              || id.Contains(search, StringComparison.OrdinalIgnoreCase));
 
         // Open the list when the text part is clicked. Clicks inside the dropdown itself also
@@ -116,39 +137,6 @@ public partial class MainWindow : Window
             textBox.SelectAll();
 
         ModelAutoCompleteBox.IsDropDownOpen = true;
-    }
-
-    /// <summary>
-    /// The model the user picked from the list, or null if the text doesn't match a known model.
-    /// </summary>
-    private string? SelectedModel => ModelAutoCompleteBox.SelectedItem as string;
-
-    private async void OnProviderSettingsChanged(bool debounce = false)
-    {
-        _updateCts?.Cancel();
-        var cts = _updateCts = new CancellationTokenSource();
-
-        try
-        {
-            if (debounce)
-                await Task.Delay(500, cts.Token);
-
-            SetProviderConfigUiEnabled(false);
-            await UpdateProvider();
-            SetStatus("Ready.");
-        }
-        catch (OperationCanceledException) when (cts.IsCancellationRequested)
-        {
-            // superseded by a newer change, ignore
-        }
-        catch (Exception ex)
-        {
-            SetErrorStatus($"Failed to update client/models: {CleanUpException(ex.Message)}");
-        }
-        finally
-        {
-            SetProviderConfigUiEnabled(true);
-        }
     }
 
     private async Task CopyHtmlToClipboard()
@@ -195,11 +183,15 @@ public partial class MainWindow : Window
         StatusTextBlock.Foreground = Brushes.Red;
         StatusTextBlock.FontWeight = FontWeight.Bold;
     }
-    
-    private async Task UpdateProvider()
-    {
-        SetStatus("Updating provider...");
 
+    private bool CreateClient()
+    {
+        if (string.IsNullOrWhiteSpace(ApiKeyTextBox.Text))
+        {
+            SetErrorStatus("Cannot create client: API key empty or whitespace");
+            return false;
+        }
+        
         var endpoint = ProviderComboBox.SelectedIndex switch
         {
             0 => new Uri("https://generativelanguage.googleapis.com/v1beta/openai/"),
@@ -210,32 +202,46 @@ public partial class MainWindow : Window
         };
 
         _llmClient = new(
-            new ApiKeyCredential(ApiKeyTextBox.Text ?? string.Empty),
+            _credential,
             new() { Endpoint = endpoint });
 
-        await UpdateModels();
+        return true;
     }
 
     private async Task UpdateModels()
     {
+        if (_llmClient is null && !CreateClient())
+        {
+            return;
+        }
+        
         SetStatus("Updating models...");
         
         var modelClient = _llmClient!.GetOpenAIModelClient();
         var result = await modelClient.GetModelsAsync();
         var modelNames = result.Value.Select(m => m.Id).Order().ToList();
 
+        var previousModel = ModelAutoCompleteBox.Text;
+        
         ModelAutoCompleteBox.ItemsSource = modelNames;
-        ModelAutoCompleteBox.SelectedItem = null;
+
+        if (string.IsNullOrWhiteSpace(previousModel) || !modelNames.Contains(previousModel))
+        {
+            // the previously selected model is now invalid, so clear it
+            ModelAutoCompleteBox.SelectedItem = null;
+            ModelAutoCompleteBox.Text = null;
+        }
+        
+        SetStatus("Ready.");
     }
 
     private async Task GenerateDescription()
     {
-        if (_llmClient is null)
+        if (_llmClient is null && !CreateClient())
         {
-            SetErrorStatus("No provider configured.");
             return;
         }
-        if (SelectedModel is not { } model)
+        if (string.IsNullOrWhiteSpace(ModelAutoCompleteBox.Text))
         {
             SetErrorStatus("Select a model from the list first.");
             return;
@@ -249,15 +255,15 @@ public partial class MainWindow : Window
         }
         var condition = ConditionTextBox.Text?.Trim();
         
-        SetStatus($"Generating with {model}...");
+        SetStatus($"Generating with {ModelAutoCompleteBox.Text}...");
         var stopwatch = Stopwatch.StartNew();
         SetUiEnabled(false);
 
         try
         {
-            var chat = _llmClient.GetChatClient(model).AsIChatClient();
+            var chat = _llmClient!.GetChatClient(ModelAutoCompleteBox.Text).AsIChatClient();
 
-            ChatResponse<ProductDescription> response = await chat.GetResponseAsync<ProductDescription>(
+            var response = await chat.GetResponseAsync<ProductDescription>(
             [
                 new ChatMessage(ChatRole.System, SystemPromptTextBox.Text ?? DefaultSystemPrompt),
                 new ChatMessage(ChatRole.User,
@@ -275,15 +281,15 @@ public partial class MainWindow : Window
             MetaDescriptionTextBox.Text = result.MetaDescription;
             HtmlTextBox.Text = result.HtmlDescription;
 
-            var status_string =
+            var statusString =
                 $"Done. Took {stopwatch.Elapsed.TotalSeconds.ToString("0.00", CultureInfo.InvariantCulture)}s.";
 
             if (response.Usage is { } usage)
             {
-                status_string += ($" ({usage.InputTokenCount} in / {usage.OutputTokenCount} out / {usage.TotalTokenCount} total)");
+                statusString += ($" ({usage.InputTokenCount} in / {usage.OutputTokenCount} out / {usage.TotalTokenCount} total)");
             }
 
-            SetStatus(status_string);
+            SetStatus(statusString);
             SaveSettings();
         }
         catch (Exception ex)
@@ -301,7 +307,8 @@ public partial class MainWindow : Window
     {
         ProviderComboBox.SelectedIndex = _savedSettings.ProviderIndex;
         ApiKeyTextBox.Text = _savedSettings.ApiKey;
-
+        ModelAutoCompleteBox.Text = _savedSettings.PreferredModel;
+        
         if (_savedSettings.CustomSystemPrompt is not null)
         {
             SystemPromptTextBox.Text = _savedSettings.CustomSystemPrompt;
@@ -316,7 +323,7 @@ public partial class MainWindow : Window
             SettingsStore.Save(new (
                 ProviderComboBox.SelectedIndex,
                 ApiKeyTextBox.Text,
-                SelectedModel, 
+                ModelAutoCompleteBox.Text, 
                 AllowEditSystemPromptCheckBox.IsChecked == true ? SystemPromptTextBox.Text : null));
         }
         catch (Exception ex)
@@ -352,6 +359,7 @@ public partial class MainWindow : Window
         ApiKeyTextBox.IsEnabled = enabled;
         AllowEditSystemPromptCheckBox.IsEnabled = enabled;
         SystemPromptTextBox.IsEnabled = enabled && (AllowEditSystemPromptCheckBox.IsChecked ?? false);
+        FetchModelsButton.IsEnabled = enabled;
     }
 
     private void SetUiEnabled(bool enabled)
