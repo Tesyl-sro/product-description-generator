@@ -132,18 +132,24 @@
         <Grid Grid.Column="2" Margin="16,0,0,0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
             <TextBlock Grid.Row="0" Classes="header" Text="Product" />
 
-            <Grid Grid.Row="1" Margin="0,0,0,14" ColumnDefinitions="*,12,*">
-                <StackPanel Grid.Column="0">
+            <Grid Grid.Row="1" Margin="0,0,0,14" ColumnDefinitions="*,12,*" RowDefinitions="Auto,Auto">
+                <StackPanel Grid.Row="0" Grid.Column="0">
                     <TextBlock Classes="label" Text="Product name" />
                     <TextBox x:Name="ProductNameTextBox"
                              PlaceholderText="e.g. Stainless Steel Water Bottle, 750 ml" />
                 </StackPanel>
 
-                <StackPanel Grid.Column="2">
+                <StackPanel Grid.Row="0" Grid.Column="2">
                     <TextBlock Classes="label" Text="Condition" />
                     <TextBox x:Name="ConditionTextBox"
                              PlaceholderText="e.g. Used, minor scratches on the lid" />
                 </StackPanel>
+
+                <!-- Divider between the inputs and the generated output -->
+                <Border Grid.Row="1" Grid.ColumnSpan="3"
+                        Height="1"
+                        Margin="0,14,0,0"
+                        Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
             </Grid>
 
             <!-- Generated output (read-only, filled by the LLM) -->
