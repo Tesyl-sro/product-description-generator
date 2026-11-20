@@ -61,6 +61,9 @@ public partial class MainWindow : Window
         // Hook up the `ClearUiState()` method to run on button click
         ClearButton.Click += (_, _) => ClearUiState();
 
+        // Delete the stored settings and put the settings panel back to its defaults
+        ResetSettingsButton.Click += (_, _) => ResetSettings();
+
         // Copy to clipboard handle
         CopyButton.Click += async (_, _) => await CopyHtmlToClipboard();
         
@@ -317,6 +320,26 @@ public partial class MainWindow : Window
         {
             SetErrorStatus($"Failed to save settings: {CleanUpException(ex.Message)}");
         }
+    }
+
+    private void ResetSettings()
+    {
+        try
+        {
+            SettingsStore.Delete();
+        }
+        catch (Exception ex)
+        {
+            SetErrorStatus($"Failed to reset settings: {CleanUpException(ex.Message)}");
+            return;
+        }
+
+        // Put the settings panel back to its defaults; unchecking "Allow editing" restores the default prompt
+        ApiKeyTextBox.Text = string.Empty;
+        ProviderComboBox.SelectedIndex = 0;
+        AllowEditSystemPromptCheckBox.IsChecked = false;
+
+        SetStatus("Settings reset.");
     }
 
     private void SetProviderConfigUiEnabled(bool enabled)

@@ -47,4 +47,10 @@ public static class SettingsStore
         if (!OperatingSystem.IsWindows())
             File.SetUnixFileMode(FilePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
     }
+
+    public static void Delete()
+    {
+        if (File.Exists(FilePath))
+            File.Delete(FilePath);
+    }
 }

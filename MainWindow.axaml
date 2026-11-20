@@ -195,6 +195,7 @@
                         HorizontalAlignment="Right"
                         Spacing="8"
                         Margin="0,12,0,0">
+                <Button x:Name="ResetSettingsButton" Content="Reset Settings" />
                 <Button x:Name="ClearButton" Content="Clear" />
                 <Button x:Name="CopyButton" Content="Copy" />
                 <Button x:Name="GenerateButton" Content="Generate" Classes="accent" />
