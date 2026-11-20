@@ -69,7 +69,10 @@ public partial class MainWindow : Window
         
         // Load the model list for the restored provider/key
         if (!string.IsNullOrEmpty(_savedSettings.ApiKey))
+        {
             OnProviderSettingsChanged();
+            ModelAutoCompleteBox.Text = _savedSettings.PreferredModel;
+        }
     }
 
     private void SetUpModelPicker()
@@ -133,7 +136,6 @@ public partial class MainWindow : Window
             SetProviderConfigUiEnabled(false);
             await UpdateProvider();
             SetStatus("Ready.");
-            SaveSettings();
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)
         {
@@ -282,6 +284,7 @@ public partial class MainWindow : Window
             }
 
             SetStatus(status_string);
+            SaveSettings();
         }
         catch (Exception ex)
         {
