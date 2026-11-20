@@ -9,6 +9,9 @@ The following inference providers are supported:
 - VeniceAI
 - OpenRouter
 
+## Preview
+![Main window of Product Description Generator](Screenshots/Main.png)
+
 ## Download
 Check the [downloads](https://github.com/Tesyl-sro/product-description-generator/releases) page. Builds are made automatically for every OS and architecture.
 Builds with `aot` use Native AOT compilation, which run faster.
