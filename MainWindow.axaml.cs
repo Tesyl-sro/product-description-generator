@@ -1,8 +1,6 @@
 using System;
-using System.ClientModel;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
@@ -12,8 +10,6 @@ using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Avalonia.Media;
-using Microsoft.Extensions.AI;
-using OpenAI;
 using ProductDescGen.Data;
 
 namespace ProductDescGen;
@@ -22,18 +18,20 @@ public partial class MainWindow : Window
 {
     private const string DefaultSystemPrompt =
         "You are an expert industrial parts copywriter and SEO specialist. I will provide you with a Product name or part number and its condition.\n\nYou must return a valid, parseable JSON object with exactly these four keys:\n- `product_title`: A clean, descriptive title for the product page.\n- `meta_title`: An SEO-optimized title (maximum 60 characters) starting with the part number.\n- `meta_description`: A SEO-optimized meta description (maximum 160 characters) that includes the part number and condition.\n- `html_description`: A professional technical product description formatted strictly in HTML. It must include a brief introductory `<p>`, a `<ul>` list of technical specifications or inferred features based on the part number, and a `<strong>` tag highlighting the condition. Do not include `<html>` or `<body>` tags, just the raw HTML content.\n\nOutput ONLY the raw JSON object. Do not include any conversational text.";
-    
-    private OpenAIClient? _llmClient;
-    private readonly ApiKeyCredential _credential = new("EMPTY");
+
+    private AiClient _client;
     private readonly AppSettings _savedSettings = SettingsStore.Load();
-    
+
     public MainWindow()
     {
         InitializeComponent();
-        
+
+        // Create a new client
+        _client = new();
+
         // Restore settings
         RestoreSettings();
-        
+
         // Set the system prompt to the default one
         SystemPromptTextBox.Text = DefaultSystemPrompt;
 
@@ -46,7 +44,7 @@ public partial class MainWindow : Window
             if (AllowEditSystemPromptCheckBox.IsChecked != true)
                 SystemPromptTextBox.Text = DefaultSystemPrompt;
         };
-        
+
         // Hook up the `GenerateDescription()` method to run on button click
         GenerateButton.Click += async (_, _) => await GenerateDescription();
 
@@ -57,41 +55,64 @@ public partial class MainWindow : Window
         ResetSettingsButton.Click += (_, _) => ResetSettings();
 
         // Copy to clipboard handle
-        CopyButton.Click += async (_, _) => await CopyHtmlToClipboard();
-        
+        CopyButton.Click += CopyHtmlToClipboard;
+
+        // Update client when the provider is changed
+        ProviderComboBox.SelectionChanged += ProviderChanged;
+
+        // Update API key in client when it's changed
+        ApiKeyTextBox.TextChanged += ApiKeyChanged;
+
         // Set up model picker
         SetUpModelPicker();
-        
-        // Update the client's API key if it's changed in the UI
-        ApiKeyTextBox.TextChanged += (_, _) => _credential.Update(string.IsNullOrWhiteSpace(ApiKeyTextBox.Text) ? "EMPTY" : ApiKeyTextBox.Text);
-        
-        // If we change the provider, we'll probably need a new key, so clear the current one
-        ProviderComboBox.SelectionChanged += (_, _) =>
-        {
-            _llmClient = null;
-            ModelAutoCompleteBox.ItemsSource = null;
-            ModelAutoCompleteBox.SelectedItem = null;
-            ModelAutoCompleteBox.Text = null;
-            ApiKeyTextBox.Text = null;
-        };
-        
+
         // Re-create the client and fetch the model list
-        FetchModelsButton.Click += async (_, _) =>
+        FetchModelsButton.Click += TryUpdateModels;
+    }
+
+    private void ProviderChanged(object? _obj, SelectionChangedEventArgs _args)
+    {
+        var endpoint = ProviderComboBox.SelectedIndex switch
         {
-            SetProviderConfigUiEnabled(false);
-            try
-            {
-                await UpdateModels();
-            }
-            catch (Exception ex)
-            {
-                SetErrorStatus($"Failed to fetch models: {CleanUpException(ex.Message)}");
-            }
-            finally
-            {
-                SetProviderConfigUiEnabled(true);
-            }
+            0 => "https://generativelanguage.googleapis.com/v1beta/openai/",
+            1 => "https://openrouter.ai/api/v1",
+            2 => "https://api.venice.ai/api/v1",
+            3 => "https://api.openai.com/v1",
+            _ => throw new ArgumentOutOfRangeException(nameof(ProviderComboBox.SelectedIndex))
         };
+
+        _client.SetEndpoint(endpoint);
+    }
+
+    private void ApiKeyChanged(object? _obj, TextChangedEventArgs _args)
+    {
+        if (string.IsNullOrWhiteSpace(ApiKeyTextBox.Text))
+        {
+            return;
+        }
+
+        _client.SetApiKey(ApiKeyTextBox.Text);
+    }
+
+    private async void TryUpdateModels(object? _obj, RoutedEventArgs _args)
+    {
+        SetProviderConfigUiEnabled(false);
+        SetStatus("Updating models...");
+
+        try
+        {
+            var models = await _client.GetModelsAsync();
+            ModelAutoCompleteBox.ItemsSource = models;
+            SetStatus("Ready.");
+        }
+        catch (Exception ex)
+        {
+            SetErrorStatus($"Failed to fetch models: {CleanUpException(ex.Message)}");
+        }
+        finally
+        {
+            SetProviderConfigUiEnabled(true);
+        }
     }
 
     private void SetUpModelPicker()
@@ -138,7 +159,7 @@ public partial class MainWindow : Window
         ModelAutoCompleteBox.IsDropDownOpen = true;
     }
 
-    private async Task CopyHtmlToClipboard()
+    private async void CopyHtmlToClipboard(object? _obj, RoutedEventArgs _args)
     {
         if (string.IsNullOrEmpty(HtmlTextBox.Text))
         {
@@ -162,7 +183,7 @@ public partial class MainWindow : Window
             SetErrorStatus($"Failed to copy: {CleanUpException(ex.Message)}");
         }
     }
-    
+
     /// <summary>
     /// Shows a normal status message in the footer, resetting any error styling.
     /// </summary>
@@ -183,117 +204,39 @@ public partial class MainWindow : Window
         StatusTextBlock.FontWeight = FontWeight.Bold;
     }
 
-    private bool CreateClient()
-    {
-        if (string.IsNullOrWhiteSpace(ApiKeyTextBox.Text))
-        {
-            SetErrorStatus("Cannot create client: API key empty or whitespace");
-            return false;
-        }
-        
-        var endpoint = ProviderComboBox.SelectedIndex switch
-        {
-            0 => new Uri("https://generativelanguage.googleapis.com/v1beta/openai/"),
-            1 => new Uri("https://openrouter.ai/api/v1"),
-            2 => new Uri("https://api.venice.ai/api/v1"),
-            3 => new Uri("https://api.openai.com/v1"),
-            _ => throw new ArgumentOutOfRangeException(nameof(ProviderComboBox.SelectedIndex))
-        };
-
-        _llmClient = new(
-            _credential,
-            new() { Endpoint = endpoint });
-
-        return true;
-    }
-
-    private async Task UpdateModels()
-    {
-        if (_llmClient is null && !CreateClient())
-        {
-            return;
-        }
-        
-        SetStatus("Updating models...");
-        
-        var modelClient = _llmClient!.GetOpenAIModelClient();
-        var result = await modelClient.GetModelsAsync();
-        var modelNames = result.Value.Select(m => m.Id).Order().ToList();
-
-        var previousModel = ModelAutoCompleteBox.Text;
-        
-        ModelAutoCompleteBox.ItemsSource = modelNames;
-
-        if (string.IsNullOrWhiteSpace(previousModel) || !modelNames.Contains(previousModel))
-        {
-            // the previously selected model is now invalid, so clear it
-            ModelAutoCompleteBox.SelectedItem = null;
-            ModelAutoCompleteBox.Text = null;
-        }
-        else
-        {
-            // still valid: mark it as picked so opening the box shows the whole list
-            ModelAutoCompleteBox.SelectedItem = previousModel;
-        }
-
-        SetStatus("Ready.");
-    }
-
     private async Task GenerateDescription()
     {
-        if (_llmClient is null && !CreateClient())
-        {
-            return;
-        }
         if (string.IsNullOrWhiteSpace(ModelAutoCompleteBox.Text))
         {
             SetErrorStatus("Select a model from the list first.");
             return;
         }
-        
+
         var name = ProductNameTextBox.Text?.Trim();
-        if (string.IsNullOrEmpty(name))
+        var condition = ConditionTextBox.Text?.Trim();
+
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(condition))
         {
-            SetErrorStatus("Enter a product name or part number.");
+            SetErrorStatus("Enter a valid product name or part number, and condition");
             return;
         }
-        var condition = ConditionTextBox.Text?.Trim();
-        
+
+
         SetStatus($"Generating with {ModelAutoCompleteBox.Text}...");
         var stopwatch = Stopwatch.StartNew();
         SetUiEnabled(false);
 
         try
         {
-            var chat = _llmClient!.GetChatClient(ModelAutoCompleteBox.Text).AsIChatClient();
+            var result = await _client.GenerateDescription(ModelAutoCompleteBox.Text, name, condition);
 
-            var response = await chat.GetResponseAsync<ProductDescription>(
-            [
-                new ChatMessage(ChatRole.System, SystemPromptTextBox.Text ?? DefaultSystemPrompt),
-                new ChatMessage(ChatRole.User,
-                    $"Product name: {name}\nCondition: {(string.IsNullOrEmpty(condition) ? "not specified" : condition)}")
-            ], ProductDataGenerationContext.Default.Options);
+            ProductTitleTextBox.Text = result.Data.ProductTitle;
+            MetaTitleTextBox.Text = result.Data.MetaTitle;
+            MetaDescriptionTextBox.Text = result.Data.MetaDescription;
+            HtmlTextBox.Text = result.Data.HtmlDescription;
 
-            if (!response.TryGetResult(out var result))
-            {
-                SetErrorStatus("The model didn't return valid JSON. Try again or pick another model.");
-                return;
-            }
-
-            ProductTitleTextBox.Text = result.ProductTitle;
-            MetaTitleTextBox.Text = result.MetaTitle;
-            MetaDescriptionTextBox.Text = result.MetaDescription;
-            HtmlTextBox.Text = result.HtmlDescription;
-
-            var statusString =
-                $"Done. Took {stopwatch.Elapsed.TotalSeconds.ToString("0.00", CultureInfo.InvariantCulture)}s.";
-
-            if (response.Usage is { } usage)
-            {
-                statusString += ($" ({usage.InputTokenCount} in / {usage.OutputTokenCount} out / {usage.TotalTokenCount} total)");
-            }
-
-            SetStatus(statusString);
+            var timeElapsed = stopwatch.Elapsed.TotalSeconds.ToString("0.00", CultureInfo.InvariantCulture);
+            SetStatus($"Done. Took {timeElapsed}s. Token usage: {result.InputTokenCount} in / {result.OutputTokenCount} out / {result.TotalTokenCount} total");
             SaveSettings();
         }
         catch (Exception ex)
@@ -302,7 +245,6 @@ public partial class MainWindow : Window
         }
         finally
         {
-            // Re-enable the UI however generation ended (success, bad JSON or exception)
             SetUiEnabled(true);
         }
     }
@@ -312,22 +254,24 @@ public partial class MainWindow : Window
         ProviderComboBox.SelectedIndex = _savedSettings.ProviderIndex;
         ApiKeyTextBox.Text = _savedSettings.ApiKey;
         ModelAutoCompleteBox.Text = _savedSettings.PreferredModel;
-        
+
+        ProviderChanged(null, null!);
+
         if (_savedSettings.CustomSystemPrompt is not null)
         {
             SystemPromptTextBox.Text = _savedSettings.CustomSystemPrompt;
             AllowEditSystemPromptCheckBox.IsChecked = true;
         }
     }
-    
+
     private void SaveSettings()
     {
         try
         {
-            SettingsStore.Save(new (
+            SettingsStore.Save(new(
                 ProviderComboBox.SelectedIndex,
                 ApiKeyTextBox.Text,
-                ModelAutoCompleteBox.Text, 
+                ModelAutoCompleteBox.Text,
                 AllowEditSystemPromptCheckBox.IsChecked == true ? SystemPromptTextBox.Text : null));
         }
         catch (Exception ex)
