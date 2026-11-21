@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -11,6 +10,7 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Avalonia.Media;
 using ProductDescGen.Data;
+using Microsoft.Extensions.AI;
 
 namespace ProductDescGen;
 
@@ -63,6 +63,9 @@ public partial class MainWindow : Window
         // Update API key in client when it's changed
         ApiKeyTextBox.TextChanged += ApiKeyChanged;
 
+        // Update reasoning in client when it's changed
+        ReasoningLevelComboBox.SelectionChanged += ReasoningLevelChanged;
+
         // Set up model picker
         SetUpModelPicker();
 
@@ -103,6 +106,22 @@ public partial class MainWindow : Window
         }
 
         _client.SetSystemPrompt(SystemPromptTextBox.Text);
+    }
+
+    private void ReasoningLevelChanged(object? _obj, SelectionChangedEventArgs _args)
+    {
+        ReasoningEffort? level = ReasoningLevelComboBox.SelectedIndex switch
+        {
+            0 => null,
+            1 => ReasoningEffort.None,
+            2 => ReasoningEffort.Low,
+            3 => ReasoningEffort.Medium,
+            4 => ReasoningEffort.High,
+            5 => ReasoningEffort.ExtraHigh,
+            _ => throw new ArgumentOutOfRangeException(nameof(ReasoningLevelComboBox.SelectedIndex))
+        };
+
+        _client.SetReasoningLevel(level);
     }
 
     private async void TryUpdateModels(object? _obj, RoutedEventArgs _args)
@@ -264,8 +283,10 @@ public partial class MainWindow : Window
         ProviderComboBox.SelectedIndex = _savedSettings.ProviderIndex;
         ApiKeyTextBox.Text = _savedSettings.ApiKey;
         ModelAutoCompleteBox.Text = _savedSettings.PreferredModel;
+        ReasoningLevelComboBox.SelectedIndex = _savedSettings.ReasoningLevelIndex;
 
         ProviderChanged(null, null!);
+        ReasoningLevelChanged(null, null!);
 
         if (_savedSettings.CustomSystemPrompt is not null)
         {
@@ -282,7 +303,8 @@ public partial class MainWindow : Window
                 ProviderComboBox.SelectedIndex,
                 ApiKeyTextBox.Text,
                 ModelAutoCompleteBox.Text,
-                AllowEditSystemPromptCheckBox.IsChecked == true ? SystemPromptTextBox.Text : null));
+                AllowEditSystemPromptCheckBox.IsChecked == true ? SystemPromptTextBox.Text : null,
+                ReasoningLevelComboBox.SelectedIndex));
         }
         catch (Exception ex)
         {
@@ -305,6 +327,7 @@ public partial class MainWindow : Window
         // Put the settings panel back to its defaults; unchecking "Allow editing" restores the default prompt
         ApiKeyTextBox.Text = string.Empty;
         ProviderComboBox.SelectedIndex = 0;
+        ReasoningLevelComboBox.SelectedIndex = 0;
         AllowEditSystemPromptCheckBox.IsChecked = false;
 
         SetStatus("Settings reset.");

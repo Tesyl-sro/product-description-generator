@@ -134,6 +134,21 @@
                 </StackPanel>
 
                 <StackPanel>
+                    <TextBlock Classes="label" Text="Reasoning effort level" />
+                    <ComboBox x:Name="ReasoningLevelComboBox"
+                              HorizontalAlignment="Stretch"
+                              SelectedIndex="0"
+                              ToolTip.Tip="Reasoning effort. Only reasoning models support this; use Default for others. Higher level means more token usage and higher cost, but better results.">
+                        <ComboBoxItem Content="Default" ToolTip.Tip="Safe default for all models." />
+                        <ComboBoxItem Content="None" ToolTip.Tip="Turns off reasoning. Not all models support this." />
+                        <ComboBoxItem Content="Low" />
+                        <ComboBoxItem Content="Medium" />
+                        <ComboBoxItem Content="High" />
+                        <ComboBoxItem Content="Ultra" ToolTip.Tip="Referred to as 'xhigh' on API level. Not all models support this. Causes extremely high token usage." />
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel>
                     <TextBlock Classes="label" Text="System prompt" />
                     <TextBox x:Name="SystemPromptTextBox"
                              AcceptsReturn="True"

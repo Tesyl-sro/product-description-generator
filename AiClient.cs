@@ -19,6 +19,7 @@ public sealed class AiClient
     private readonly static Uri EmptyEndpoint = new("https://example.com");
 
     private string _systemMessage;
+    private ReasoningEffort? _reasoningEffort;
     private OpenAIClient _client;
     private readonly ApiKeyCredential _credential = new(EmptyKey);
 
@@ -36,6 +37,11 @@ public sealed class AiClient
     public void SetApiKey(string key)
     {
         _credential.Update(key);
+    }
+
+    public void SetReasoningLevel(ReasoningEffort? level)
+    {
+        _reasoningEffort = level;
     }
 
     public void SetSystemPrompt(string prompt)
@@ -67,9 +73,13 @@ public sealed class AiClient
         ChatMessage systemPrompt = new(ChatRole.System, _systemMessage);
         ChatMessage userPrompt = new(ChatRole.User, $"Product name: {productName}\nCondition: {productCondition}");
         ChatMessage[] chatHistory = [systemPrompt, userPrompt];
+        ChatOptions options = new()
+        {
+            Reasoning = new() { Effort = _reasoningEffort, Output = ReasoningOutput.None }
+        };
 
         var chatClient = _client.GetChatClient(model).AsIChatClient();
-        var response = await chatClient.GetResponseAsync<ProductDescription>(chatHistory, ProductDataGenerationContext.Default.Options);
+        var response = await chatClient.GetResponseAsync<ProductDescription>(chatHistory, ProductDataGenerationContext.Default.Options, options);
 
         if (!response.TryGetResult(out var generatedProductData) || generatedProductData is null)
         {

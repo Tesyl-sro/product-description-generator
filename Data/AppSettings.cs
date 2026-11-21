@@ -9,7 +9,8 @@ public sealed record AppSettings(
     int ProviderIndex = 0,
     string? ApiKey = null,
     string? PreferredModel = null,
-    string? CustomSystemPrompt = null);
+    string? CustomSystemPrompt = null,
+    int ReasoningLevelIndex = 0);
 
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(AppSettings))]
