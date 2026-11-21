@@ -9,7 +9,7 @@ using System;
 
 namespace ProductDescGen;
 
-public sealed record GenerationResult(ProductDescription Data, long InputTokenCount, long OutputTokenCount, long TotalTokenCount);
+public sealed record GenerationResult(ProductDescription Data, long InputTokenCount, long OutputTokenCount, long ReasoningTokenCount, long TotalTokenCount);
 
 public sealed class AiClient
 {
@@ -90,6 +90,7 @@ public sealed class AiClient
             generatedProductData,
             response.Usage?.InputTokenCount ?? 0,
             response.Usage?.OutputTokenCount ?? 0,
+            response.Usage?.ReasoningTokenCount ?? 0,
             response.Usage?.TotalTokenCount ?? 0);
     }
 }

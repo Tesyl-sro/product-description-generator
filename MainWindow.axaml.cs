@@ -265,7 +265,7 @@ public partial class MainWindow : Window
             HtmlTextBox.Text = result.Data.HtmlDescription;
 
             var timeElapsed = stopwatch.Elapsed.TotalSeconds.ToString("0.00", CultureInfo.InvariantCulture);
-            SetStatus($"Done. Took {timeElapsed}s. Token usage: {result.InputTokenCount} in / {result.OutputTokenCount} out / {result.TotalTokenCount} total");
+            SetStatus($"Done. Took {timeElapsed}s. Token usage: {result.InputTokenCount} in / {result.OutputTokenCount} out / {result.ReasoningTokenCount} reasoning / {result.TotalTokenCount} total");
             SaveSettings();
         }
         catch (Exception ex)
