@@ -12,7 +12,7 @@
     <!-- Product metadata (shown in the exe's Properties > Details on Windows) -->
     <PropertyGroup>
         <!-- Fallback for local builds; CI overrides this from the git tag -->
-        <VersionPrefix>1.1.1</VersionPrefix>
+        <VersionPrefix>1.2.0</VersionPrefix>
         <Product>Product Description Generator</Product>
         <AssemblyTitle>Product Description Generator</AssemblyTitle>
         <Description>Generates product descriptions using AI.</Description>
