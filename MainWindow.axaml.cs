@@ -46,13 +46,13 @@ public partial class MainWindow : Window
         };
 
         // Hook up the `GenerateDescription()` method to run on button click
-        GenerateButton.Click += async (_, _) => await GenerateDescription();
+        GenerateButton.Click += GenerateDescription;
 
         // Hook up the `ClearUiState()` method to run on button click
-        ClearButton.Click += (_, _) => ClearUiState();
+        ClearButton.Click += ClearUiState;
 
         // Delete the stored settings and put the settings panel back to its defaults
-        ResetSettingsButton.Click += (_, _) => ResetSettings();
+        ResetSettingsButton.Click += ResetSettings;
 
         // Copy to clipboard handle
         CopyButton.Click += CopyHtmlToClipboard;
@@ -204,7 +204,7 @@ public partial class MainWindow : Window
         StatusTextBlock.FontWeight = FontWeight.Bold;
     }
 
-    private async Task GenerateDescription()
+    private async void GenerateDescription(object? _obj, RoutedEventArgs _args)
     {
         if (string.IsNullOrWhiteSpace(ModelAutoCompleteBox.Text))
         {
@@ -280,7 +280,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ResetSettings()
+    private void ResetSettings(object? _obj, RoutedEventArgs _args)
     {
         try
         {
@@ -323,7 +323,7 @@ public partial class MainWindow : Window
         ConditionTextBox.IsEnabled = enabled;
     }
 
-    private void ClearUiState()
+    private void ClearUiState(object? _obj, RoutedEventArgs _args)
     {
         HtmlTextBox.Text = string.Empty;
         MetaDescriptionTextBox.Text = string.Empty;
