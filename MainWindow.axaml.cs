@@ -16,9 +16,6 @@ namespace ProductDescGen;
 
 public partial class MainWindow : Window
 {
-    private const string DefaultSystemPrompt =
-        "You are an expert industrial parts copywriter and SEO specialist. I will provide you with a Product name or part number and its condition.\n\nYou must return a valid, parseable JSON object with exactly these four keys:\n- `product_title`: A clean, descriptive title for the product page.\n- `meta_title`: An SEO-optimized title (maximum 60 characters) starting with the part number.\n- `meta_description`: A SEO-optimized meta description (maximum 160 characters) that includes the part number and condition.\n- `html_description`: A professional technical product description formatted strictly in HTML. It must include a brief introductory `<p>`, a `<ul>` list of technical specifications or inferred features based on the part number, and a `<strong>` tag highlighting the condition. Do not include `<html>` or `<body>` tags, just the raw HTML content.\n\nOutput ONLY the raw JSON object. Do not include any conversational text.";
-
     private AiClient _client;
     private readonly AppSettings _savedSettings = SettingsStore.Load();
 
@@ -33,7 +30,7 @@ public partial class MainWindow : Window
         RestoreSettings();
 
         // Set the system prompt to the default one
-        SystemPromptTextBox.Text = DefaultSystemPrompt;
+        SystemPromptTextBox.Text = _client.GetSystemPrompt();
 
         // Display app version
         VersionTextBlock.Text = $"v{GetAppVersion()}";
@@ -42,8 +39,11 @@ public partial class MainWindow : Window
         AllowEditSystemPromptCheckBox.IsCheckedChanged += (_, _) =>
         {
             if (AllowEditSystemPromptCheckBox.IsChecked != true)
-                SystemPromptTextBox.Text = DefaultSystemPrompt;
+                SystemPromptTextBox.Text = _client.GetSystemPrompt();
         };
+
+        // Update client's system prompt when it's changed
+        SystemPromptTextBox.TextChanged += SystemPromptChanged;
 
         // Hook up the `GenerateDescription()` method to run on button click
         GenerateButton.Click += GenerateDescription;
@@ -92,6 +92,17 @@ public partial class MainWindow : Window
         }
 
         _client.SetApiKey(ApiKeyTextBox.Text);
+    }
+
+    private void SystemPromptChanged(object? _obj, RoutedEventArgs _args)
+    {
+        if (string.IsNullOrWhiteSpace(SystemPromptTextBox.Text))
+        {
+            _client.ResetSystemPrompt();
+            return;
+        }
+
+        _client.SetSystemPrompt(SystemPromptTextBox.Text);
     }
 
     private async void TryUpdateModels(object? _obj, RoutedEventArgs _args)
@@ -220,7 +231,6 @@ public partial class MainWindow : Window
             SetErrorStatus("Enter a valid product name or part number, and condition");
             return;
         }
-
 
         SetStatus($"Generating with {ModelAutoCompleteBox.Text}...");
         var stopwatch = Stopwatch.StartNew();

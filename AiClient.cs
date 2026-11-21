@@ -43,6 +43,16 @@ public sealed class AiClient
         _systemMessage = prompt;
     }
 
+    public void ResetSystemPrompt()
+    {
+        _systemMessage = DefaultSystemPrompt;
+    }
+
+    public string GetSystemPrompt()
+    {
+        return _systemMessage;
+    }
+
     public async Task<List<string>> GetModelsAsync()
     {
         var modelClient = _client.GetOpenAIModelClient();
