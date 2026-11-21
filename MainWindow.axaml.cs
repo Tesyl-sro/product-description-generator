@@ -26,11 +26,11 @@ public partial class MainWindow : Window
         // Create a new client
         _client = new();
 
-        // Restore settings
-        RestoreSettings();
-
         // Set the system prompt to the default one
         SystemPromptTextBox.Text = _client.GetSystemPrompt();
+
+        // Restore settings
+        RestoreSettings();
 
         // Display app version
         VersionTextBlock.Text = $"v{GetAppVersion()}";
