@@ -16,7 +16,7 @@ public sealed class AiClient
     private const string EmptyKey = "EMPTY";
     private const string DefaultSystemPrompt =
         "You are an expert industrial parts copywriter and SEO specialist. I will provide you with a Product name or part number and its condition.\n\nYou must return a valid, parseable JSON object with exactly these four keys:\n- `product_title`: A clean, descriptive title for the product page.\n- `meta_title`: An SEO-optimized title (maximum 60 characters) starting with the part number.\n- `meta_description`: A SEO-optimized meta description (maximum 160 characters) that includes the part number and condition.\n- `html_description`: A professional technical product description formatted strictly in HTML. It must include a brief introductory `<p>`, a `<ul>` list of technical specifications or inferred features based on the part number, and a `<strong>` tag highlighting the condition. Do not include `<html>` or `<body>` tags, just the raw HTML content.\n\nOutput ONLY the raw JSON object. Do not include any conversational text.";
-    private readonly static Uri EmptyEndpoint = new("https://example.com");
+    private static readonly Uri EmptyEndpoint = new("https://example.com");
 
     private string _systemMessage;
     private ReasoningEffort? _reasoningEffort;
@@ -81,7 +81,7 @@ public sealed class AiClient
         var chatClient = _client.GetChatClient(model).AsIChatClient();
         var response = await chatClient.GetResponseAsync<ProductDescription>(chatHistory, ProductDataGenerationContext.Default.Options, options);
 
-        if (!response.TryGetResult(out var generatedProductData) || generatedProductData is null)
+        if (!response.TryGetResult(out var generatedProductData))
         {
             throw new Exception("Model did not return valid JSON");
         }

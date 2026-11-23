@@ -16,7 +16,7 @@ namespace ProductDescGen;
 
 public partial class MainWindow : Window
 {
-    private AiClient _client;
+    private readonly AiClient _client;
     private readonly AppSettings _savedSettings = SettingsStore.Load();
 
     public MainWindow()
@@ -76,7 +76,7 @@ public partial class MainWindow : Window
         FetchModelsButton.Click += TryUpdateModels;
     }
 
-    private void ProviderChanged(object? _obj, SelectionChangedEventArgs _args)
+    private void ProviderChanged(object? obj, SelectionChangedEventArgs args)
     {
         var endpoint = ProviderComboBox.SelectedIndex switch
         {
@@ -90,7 +90,7 @@ public partial class MainWindow : Window
         _client.SetEndpoint(endpoint);
     }
 
-    private void ApiKeyChanged(object? _obj, TextChangedEventArgs _args)
+    private void ApiKeyChanged(object? obj, TextChangedEventArgs args)
     {
         if (string.IsNullOrWhiteSpace(ApiKeyTextBox.Text))
         {
@@ -100,7 +100,7 @@ public partial class MainWindow : Window
         _client.SetApiKey(ApiKeyTextBox.Text);
     }
 
-    private void SystemPromptChanged(object? _obj, RoutedEventArgs _args)
+    private void SystemPromptChanged(object? obj, RoutedEventArgs args)
     {
         if (string.IsNullOrWhiteSpace(SystemPromptTextBox.Text))
         {
@@ -111,7 +111,7 @@ public partial class MainWindow : Window
         _client.SetSystemPrompt(SystemPromptTextBox.Text);
     }
 
-    private void ReasoningLevelChanged(object? _obj, SelectionChangedEventArgs _args)
+    private void ReasoningLevelChanged(object? obj, SelectionChangedEventArgs args)
     {
         ReasoningEffort? level = ReasoningLevelComboBox.SelectedIndex switch
         {
@@ -127,7 +127,7 @@ public partial class MainWindow : Window
         _client.SetReasoningLevel(level);
     }
 
-    private async void TryUpdateModels(object? _obj, RoutedEventArgs _args)
+    private async void TryUpdateModels(object? obj, RoutedEventArgs args)
     {
         SetProviderConfigUiEnabled(false);
         SetStatus("Updating models...");
@@ -192,7 +192,7 @@ public partial class MainWindow : Window
         ModelAutoCompleteBox.IsDropDownOpen = true;
     }
 
-    private async void CopyHtmlToClipboard(object? _obj, RoutedEventArgs _args)
+    private async void CopyHtmlToClipboard(object? obj, RoutedEventArgs args)
     {
         if (string.IsNullOrEmpty(HtmlTextBox.Text))
         {
@@ -237,7 +237,7 @@ public partial class MainWindow : Window
         StatusTextBlock.FontWeight = FontWeight.Bold;
     }
 
-    private async void GenerateDescription(object? _obj, RoutedEventArgs _args)
+    private async void GenerateDescription(object? obj, RoutedEventArgs args)
     {
         if (string.IsNullOrWhiteSpace(ModelAutoCompleteBox.Text))
         {
@@ -316,7 +316,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ResetSettings(object? _obj, RoutedEventArgs _args)
+    private void ResetSettings(object? obj, RoutedEventArgs args)
     {
         try
         {
@@ -362,7 +362,7 @@ public partial class MainWindow : Window
         ResetSettingsButton.IsEnabled = enabled;
     }
 
-    private void ClearUiState(object? _obj, RoutedEventArgs _args)
+    private void ClearUiState(object? obj, RoutedEventArgs args)
     {
         HtmlTextBox.Text = string.Empty;
         MetaDescriptionTextBox.Text = string.Empty;
@@ -383,10 +383,6 @@ public partial class MainWindow : Window
         HtmlPreviewButton.Content = show ? "Show HTML" : "HTML Preview";
     }
 
-    /// <summary>
-    /// The app version from the assembly (csproj VersionPrefix locally, the git tag in CI),
-    /// without the "+commit hash" suffix the SDK appends. Safe under Native AOT.
-    /// </summary>
     private static string GetAppVersion()
     {
         var version = typeof(MainWindow).Assembly
