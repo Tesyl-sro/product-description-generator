@@ -66,6 +66,9 @@ public partial class MainWindow : Window
         // Update reasoning in client when it's changed
         ReasoningLevelComboBox.SelectionChanged += ReasoningLevelChanged;
 
+        // Toggle between the raw HTML and a rendered preview
+        HtmlPreviewButton.Click += (_, _) => ShowHtmlPreview(!HtmlPreviewBorder.IsVisible);
+
         // Set up model picker
         SetUpModelPicker();
 
@@ -263,6 +266,7 @@ public partial class MainWindow : Window
             MetaTitleTextBox.Text = result.Data.MetaTitle;
             MetaDescriptionTextBox.Text = result.Data.MetaDescription;
             HtmlTextBox.Text = result.Data.HtmlDescription;
+            ShowHtmlPreview(false);
 
             var timeElapsed = stopwatch.Elapsed.TotalSeconds.ToString("0.00", CultureInfo.InvariantCulture);
             SetStatus($"Done. Took {timeElapsed}s. Token usage: {result.InputTokenCount} in / {result.OutputTokenCount} out / {result.ReasoningTokenCount} reasoning / {result.TotalTokenCount} total");
@@ -349,11 +353,13 @@ public partial class MainWindow : Window
         ClearButton.IsEnabled = enabled;
         CopyButton.IsEnabled = enabled;
         HtmlTextBox.IsEnabled = enabled;
+        HtmlPreviewButton.IsEnabled = enabled;
         MetaTitleTextBox.IsEnabled = enabled;
         MetaDescriptionTextBox.IsEnabled = enabled;
         ProductTitleTextBox.IsEnabled = enabled;
         ProductNameTextBox.IsEnabled = enabled;
         ConditionTextBox.IsEnabled = enabled;
+        ResetSettingsButton.IsEnabled = enabled;
     }
 
     private void ClearUiState(object? _obj, RoutedEventArgs _args)
@@ -362,6 +368,19 @@ public partial class MainWindow : Window
         MetaDescriptionTextBox.Text = string.Empty;
         MetaTitleTextBox.Text = string.Empty;
         ProductTitleTextBox.Text = string.Empty;
+        ShowHtmlPreview(false);
+    }
+
+    private void ShowHtmlPreview(bool show)
+    {
+        if (show)
+            HtmlPreviewBlock.Inlines = HtmlInlines.Build(HtmlTextBox.Text ?? string.Empty);
+        else
+            HtmlPreviewBlock.Inlines?.Clear();
+
+        HtmlPreviewBorder.IsVisible = show;
+        HtmlTextBox.IsVisible = !show;
+        HtmlPreviewButton.Content = show ? "Show HTML" : "HTML Preview";
     }
 
     /// <summary>
