@@ -17,6 +17,7 @@ namespace ProductDescGen;
 public partial class MainWindow : Window
 {
     private readonly AiClient _client;
+    private readonly UpdateChecker _updateChecker;
     private readonly AppSettings _savedSettings = SettingsStore.Load();
 
     public MainWindow()
@@ -25,6 +26,9 @@ public partial class MainWindow : Window
 
         // Create a new client
         _client = new();
+        
+        // Create update checker
+        _updateChecker = new(GetAppVersion());
 
         // Set the system prompt to the default one
         SystemPromptTextBox.Text = _client.GetSystemPrompt();
@@ -34,6 +38,9 @@ public partial class MainWindow : Window
 
         // Display app version
         VersionTextBlock.Text = $"v{GetAppVersion()}";
+
+        // Check for updates once the window is shown
+        Opened += CheckForUpdates;
 
         // Unchecking "Allow editing" discards any edits and restores the default prompt
         AllowEditSystemPromptCheckBox.IsCheckedChanged += (_, _) =>
@@ -381,6 +388,23 @@ public partial class MainWindow : Window
         HtmlPreviewBorder.IsVisible = show;
         HtmlTextBox.IsVisible = !show;
         HtmlPreviewButton.Content = show ? "Show HTML" : "HTML Preview";
+    }
+
+    private async void CheckForUpdates(object? sender, EventArgs e)
+    {
+        var update = await _updateChecker.CheckForUpdateAsync();
+        if (update is null)
+        {
+            return;
+        }
+
+        VersionTextBlock.Text = $"v{GetAppVersion()} → v{update.Latest} available";
+        VersionTextBlock.Opacity = 1;
+        VersionTextBlock.Foreground = Brushes.DodgerBlue;
+        VersionTextBlock.Cursor = new Cursor(StandardCursorType.Hand);
+        ToolTip.SetTip(VersionTextBlock, "Update available! Open the release page");
+        VersionTextBlock.PointerPressed += (_, _) =>
+            Process.Start(new ProcessStartInfo(update.Url) { UseShellExecute = true });
     }
 
     private static string GetAppVersion()
