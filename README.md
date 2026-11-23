@@ -10,7 +10,16 @@ The following inference providers are supported:
 - OpenRouter
 
 ## Preview
-![Main window of Product Description Generator](Screenshots/Main.png)
+<table>
+  <tr>
+    <th>Main window</th>
+    <th>HTML preview</th>
+  </tr>
+  <tr>
+    <td><img src="Screenshots/Main.png" alt="Main window of Product Description Generator"></td>
+    <td><img src="Screenshots/MainHtmlPreview.png" alt="Main window with the generated HTML description rendered as a preview"></td>
+  </tr>
+</table>
 
 ## Download
 Check the [downloads](https://github.com/Tesyl-sro/product-description-generator/releases) page. Builds are made automatically for every OS and architecture.
