@@ -150,17 +150,18 @@
 
                 <StackPanel>
                     <TextBlock Classes="label" Text="System prompt" />
+                    <CheckBox x:Name="AllowEditSystemPromptCheckBox"
+                              IsChecked="False"
+                              Content="Allow editing system prompt" />
                     <TextBox x:Name="SystemPromptTextBox"
+                             Margin="0,6,0,0"
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
                              Height="200"
                              VerticalContentAlignment="Top"
+                             IsVisible="{Binding #AllowEditSystemPromptCheckBox.IsChecked}"
                              IsEnabled="{Binding #AllowEditSystemPromptCheckBox.IsChecked}"
                              PlaceholderText="You are a copywriter who writes concise, persuasive product descriptions..." />
-                    <CheckBox x:Name="AllowEditSystemPromptCheckBox"
-                              Margin="0,6,0,0"
-                              IsChecked="False"
-                              Content="Allow editing system prompt" />
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
