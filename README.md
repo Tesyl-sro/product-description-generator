@@ -1,5 +1,5 @@
 # Product Description Generator - GenAI
-Simple tool for creating SEO friendly product listing title and HTML description. Built with [Avalonia](https://avaloniaui.net/) and [.NET 10](https://dotnet.microsoft.com/en-us/). Fully cross-platform - Windows, macOS and Linux, both x64 and ARM64.
+Simple tool for generating SEO friendly product listings with AI. Built with [Avalonia](https://avaloniaui.net/) and [.NET 10](https://dotnet.microsoft.com/en-us/). Fully cross-platform - Windows, macOS and Linux, both x64 and ARM64.
 
 The following inference providers are supported:
 - Google
