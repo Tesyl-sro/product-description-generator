@@ -35,6 +35,9 @@ public partial class MainWindow : Window
 
         // Restore settings
         RestoreSettings();
+        
+        // Set up model picker
+        SetUpModelPicker();
 
         // Display app version
         VersionTextBlock.Text = $"v{GetAppVersion()}";
@@ -75,9 +78,6 @@ public partial class MainWindow : Window
 
         // Toggle between the raw HTML and a rendered preview
         HtmlPreviewButton.Click += (_, _) => ShowHtmlPreview(!HtmlPreviewBorder.IsVisible);
-
-        // Set up model picker
-        SetUpModelPicker();
 
         // Re-create the client and fetch the model list
         FetchModelsButton.Click += TryUpdateModels;
