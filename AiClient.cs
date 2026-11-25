@@ -37,6 +37,8 @@ public sealed class AiClient
 
     public void SetApiKey(string key)
     {
+        if (string.IsNullOrWhiteSpace(key))
+            key = EmptyKey;
         _credential.Update(key);
     }
 

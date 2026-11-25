@@ -99,12 +99,7 @@ public partial class MainWindow : Window
 
     private void ApiKeyChanged(object? obj, TextChangedEventArgs args)
     {
-        if (string.IsNullOrWhiteSpace(ApiKeyTextBox.Text))
-        {
-            return;
-        }
-
-        _client.SetApiKey(ApiKeyTextBox.Text);
+        _client.SetApiKey(ApiKeyTextBox.Text ?? string.Empty);
     }
 
     private void SystemPromptChanged(object? obj, RoutedEventArgs args)
@@ -136,6 +131,18 @@ public partial class MainWindow : Window
 
     private async void TryUpdateModels(object? obj, RoutedEventArgs args)
     {
+        if (string.IsNullOrWhiteSpace(ApiKeyTextBox.Text))
+        {
+            SetErrorStatus("Please enter your API key.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(ModelAutoCompleteBox.Text))
+        {
+            SetErrorStatus("Please select a model.");
+            return;
+        }
+        
         SetProviderConfigUiEnabled(false);
         SetStatus("Updating models...");
 
@@ -234,9 +241,6 @@ public partial class MainWindow : Window
         StatusTextBlock.ClearValue(TextBlock.FontWeightProperty);
     }
 
-    /// <summary>
-    /// Shows an error message in the footer in bold red.
-    /// </summary>
     private void SetErrorStatus(string text)
     {
         StatusTextBlock.Text = text;
@@ -246,9 +250,15 @@ public partial class MainWindow : Window
 
     private async void GenerateDescription(object? obj, RoutedEventArgs args)
     {
+        if (string.IsNullOrWhiteSpace(ApiKeyTextBox.Text))
+        {
+            SetErrorStatus("Please enter your API key.");
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(ModelAutoCompleteBox.Text))
         {
-            SetErrorStatus("Select a model from the list first.");
+            SetErrorStatus("Please select a model.");
             return;
         }
 
