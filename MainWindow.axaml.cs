@@ -231,9 +231,6 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>
-    /// Shows a normal status message in the footer, resetting any error styling.
-    /// </summary>
     private void SetStatus(string text)
     {
         StatusTextBlock.Text = text;
