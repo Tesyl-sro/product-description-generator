@@ -6,9 +6,12 @@ using System.Threading.Tasks;
 
 namespace ProductDescGen;
 
-file sealed record GitHubRelease(
+internal sealed record GitHubRelease(
     [property: JsonPropertyName("tag_name")] string TagName,
     [property: JsonPropertyName("html_url")] string HtmlUrl);
+
+[JsonSerializable(typeof(GitHubRelease))]
+internal partial class GitHubReleaseContext : JsonSerializerContext;
 
 public sealed record NewVersionInfo(string Latest, string Url);
 
@@ -30,7 +33,7 @@ public sealed class UpdateChecker
             using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
             http.DefaultRequestHeaders.UserAgent.ParseAdd("ProductDescGen"); // GitHub requires a User-Agent
 
-            var release = await http.GetFromJsonAsync<GitHubRelease>(GitHubReleasesApiUrl);
+            var release = await http.GetFromJsonAsync(GitHubReleasesApiUrl, GitHubReleaseContext.Default.GitHubRelease);
 
             if (release is null)
             {
