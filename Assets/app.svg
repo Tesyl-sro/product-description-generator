@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#9333EA"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background tile -->
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#bg)"/>
+
+  <!-- Description card -->
+  <rect x="56" y="60" width="120" height="148" rx="16" fill="#FFFFFF"/>
+  <rect x="76" y="86"  width="56" height="12" rx="6" fill="#4F46E5"/>
+  <rect x="76" y="116" width="80" height="10" rx="5" fill="#C7D2FE"/>
+  <rect x="76" y="140" width="80" height="10" rx="5" fill="#C7D2FE"/>
+  <rect x="76" y="164" width="52" height="10" rx="5" fill="#C7D2FE"/>
+
+  <!-- AI sparkles (stroked with the tile colour so they separate from the card) -->
+  <path d="M180 34 Q180 78 224 78 Q180 78 180 122 Q180 78 136 78 Q180 78 180 34 Z"
+        fill="url(#spark)" stroke="#7C3AED" stroke-width="8" stroke-linejoin="round" paint-order="stroke"/>
+  <path d="M208 136 Q208 156 228 156 Q208 156 208 176 Q208 156 188 156 Q208 156 208 136 Z"
+        fill="#FDE68A"/>
+</svg>

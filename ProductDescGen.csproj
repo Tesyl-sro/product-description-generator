@@ -19,11 +19,11 @@
         <Company>TESYL s.r.o.</Company>
         <Authors>TESYL s.r.o., Fábián Varga</Authors>
         <Copyright>© 2026 TESYL s.r.o.</Copyright>
-        <!-- Uncomment once the icon file exists, otherwise the build fails -->
-        <!-- <ApplicationIcon>Assets/app.ico</ApplicationIcon> -->
+        <ApplicationIcon>Assets/app.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
+        <AvaloniaResource Include="Assets/app.ico" />
         <PackageReference Include="Avalonia" Version="12.1.6" />
         <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
