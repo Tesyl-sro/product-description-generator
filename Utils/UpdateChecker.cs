@@ -4,7 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace ProductDescGen;
+namespace ProductDescGen.Utils;
 
 internal sealed record GitHubRelease(
     [property: JsonPropertyName("tag_name")] string TagName,

@@ -11,8 +11,9 @@ using Avalonia.VisualTree;
 using Avalonia.Media;
 using ProductDescGen.Data;
 using Microsoft.Extensions.AI;
+using ProductDescGen.Utils;
 
-namespace ProductDescGen;
+namespace ProductDescGen.Windows;
 
 public partial class MainWindow : Window
 {
@@ -388,7 +389,7 @@ public partial class MainWindow : Window
     private void ShowHtmlPreview(bool show)
     {
         if (show)
-            HtmlPreviewBlock.Inlines = HtmlInlines.Build(HtmlTextBox.Text ?? string.Empty);
+            HtmlPreviewBlock.Inlines = HtmlToInlineConverter.Build(HtmlTextBox.Text ?? string.Empty);
         else
             HtmlPreviewBlock.Inlines?.Clear();
 

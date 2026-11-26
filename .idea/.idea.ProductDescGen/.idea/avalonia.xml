@@ -4,6 +4,7 @@
     <option name="projectPerEditor">
       <map>
         <entry key="MainWindow.axaml" value="ProductDescGen.csproj" />
+        <entry key="Windows/MainWindow.axaml" value="ProductDescGen.csproj" />
       </map>
     </option>
   </component>

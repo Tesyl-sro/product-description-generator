@@ -7,7 +7,7 @@ using ProductDescGen.Data;
 using System.Collections.Generic;
 using System;
 
-namespace ProductDescGen;
+namespace ProductDescGen.Utils;
 
 public sealed record GenerationResult(ProductDescription Data, long InputTokenCount, long OutputTokenCount, long ReasoningTokenCount, long TotalTokenCount);
 

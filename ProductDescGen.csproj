@@ -37,6 +37,13 @@
         <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.11.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Windows\MainWindow.axaml.cs">
+        <DependentUpon>MainWindow.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+
     <!-- SkiaSharp/HarfBuzz ship native .pdb debug symbols (~100 MB) that end up next to the exe; drop them -->
     <Target Name="RemoveNativePdbsFromPublish" AfterTargets="Publish">
         <ItemGroup>

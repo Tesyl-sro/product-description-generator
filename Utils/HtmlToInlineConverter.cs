@@ -3,9 +3,9 @@ using Avalonia.Controls.Documents;
 using Avalonia.Media;
 using HtmlAgilityPack;
 
-namespace ProductDescGen;
+namespace ProductDescGen.Utils;
 
-public static partial class HtmlInlines
+public static partial class HtmlToInlineConverter
 {
     [GeneratedRegex(@"\s+")]
     private static partial Regex Ws();
