@@ -3,6 +3,7 @@
   <component name="AvaloniaProject">
     <option name="projectPerEditor">
       <map>
+        <entry key="App.axaml" value="ProductDescGen.csproj" />
         <entry key="MainWindow.axaml" value="ProductDescGen.csproj" />
         <entry key="Windows/MainWindow.axaml" value="ProductDescGen.csproj" />
       </map>
